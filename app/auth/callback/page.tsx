@@ -9,21 +9,23 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     const run = async () => {
-      // Try PKCE/code exchange if present (works for OAuth; safe to call)
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession()
-      if (exchangeError) {
-        // For magic links, Supabase returns tokens in hash; just try to read session next
-        // console.warn('exchangeCodeForSession:', exchangeError.message)
+      // PKCE / OAuth code exchange (expects the full URL)
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(
+        window.location.href
+      )
+      // For magic links, tokens can arrive in the URL fragment. After the call above,
+      // Supabase should establish the session and set cookies (client-side).
+      // It's okay if exchangeError exists for magic-link flows; we check session next.
+
+      // Optional: clear the hash to keep URLs tidy
+      if (window.location.hash) {
+        history.replaceState(null, '', window.location.pathname + window.location.search)
       }
 
-      // Ensure session is established and cookies are set
-      const { data: { session }, error } = await supabase.auth.getSession()
-
-      if (session && !error) {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
         router.replace('/dashboard')
       } else {
-        // If the email link was stale/used, Supabase will surface an error via hash
-        // Send them back to login with a friendly message
         router.replace('/login?error=Login%20link%20invalid%20or%20expired')
       }
     }
