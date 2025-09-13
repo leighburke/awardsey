@@ -1,0 +1,21 @@
+import './globals.css'
+import type { Metadata } from 'next'
+import Header from '@/components/Header'
+
+export const metadata: Metadata = {
+  title: 'Awardsey',
+  description: 'Build habits. Win awards.',
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        {/* @ts-expect-error Async Server Component */}
+        <Header />
+        {children}
+      </body>
+    </html>
+  )
+}
+
