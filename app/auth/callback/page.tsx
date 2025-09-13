@@ -10,7 +10,7 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     const run = async () => {
       // PKCE / OAuth code exchange (expects the full URL)
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(
+      const { error: _exchangeError } = await supabase.auth.exchangeCodeForSession(
         window.location.href
       )
       // For magic links, tokens can arrive in the URL fragment. After the call above,
