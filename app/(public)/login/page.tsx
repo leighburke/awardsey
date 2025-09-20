@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { getSupabaseBrowser } from '@/lib/supabase/client'
+import { getSupabaseBrowser } from '../../../lib/supabase/client'
 
 export default function LoginPage() {
   const supabase = getSupabaseBrowser()
