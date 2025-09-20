@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { createSupabaseServer } from '@/lib/supabase/server'
 
 export default async function Header() {
-  const supabase = createSupabaseServer()
+  const supabase = createSupabaseServerReadOnly()
   const { data: { user } } = await supabase.auth.getUser()
 
   return (

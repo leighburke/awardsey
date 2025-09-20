@@ -18,7 +18,7 @@ type Entry = {
 }
 
 export default async function DashboardPage() {
-  const supabase = createSupabaseServer()
+  const supabase = createSupabaseServerReadOnly()
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) {

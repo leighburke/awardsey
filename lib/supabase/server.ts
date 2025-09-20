@@ -1,34 +1,43 @@
-// lib/supabase/server.ts
 import { cookies } from 'next/headers'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
-// Import the concrete type that cookies() resolves to
-import type { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies'
+
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 /**
- * Use this in Server Components, Route Handlers, and Server Actions.
- * It automatically reads/writes the auth session via cookies.
+ * Read-only Supabase client for Server Components.
+ * Only exposes cookies.get so it NEVER tries to mutate cookies during render.
  */
-export function createSupabaseServer() {
-  // Some setups type cookies() as Promise<ReadonlyRequestCookies>.
-  // We know it's sync in Server Components; cast it to the concrete type.
-  const cookieStore = cookies() as unknown as ReadonlyRequestCookies
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          cookieStore.set({ name, value, ...options })
-        },
-        remove(name: string, options: CookieOptions) {
-          cookieStore.set({ name, value: '', ...options, maxAge: 0 })
-        },
+export function createSupabaseServerReadOnly() {
+  const store = cookies()
+  return createServerClient(url, anon, {
+    cookies: {
+      get(name: string) {
+        return store.get(name)?.value
       },
-    }
-  )
+      // no set/remove on purpose (Next will throw in RSC)
+    },
+  })
 }
 
+/**
+ * Read–write Supabase client for Server Actions / Route Handlers.
+ * Safe to call cookies.set/remove in these contexts.
+ */
+export function createSupabaseServer() {
+  const store = cookies()
+  return createServerClient(url, anon, {
+    cookies: {
+      get(name: string) {
+        return store.get(name)?.value
+      },
+      set(name: string, value: string, options: CookieOptions) {
+        // Allowed in Server Actions / Route Handlers
+        store.set({ name, value, ...options })
+      },
+      remove(name: string, options: CookieOptions) {
+        store.set({ name, value: '', ...options, maxAge: 0 })
+      },
+    },
+  })
+}
