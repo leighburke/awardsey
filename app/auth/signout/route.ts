@@ -1,11 +1,11 @@
 // app/auth/signout/route.ts
 import { NextResponse } from 'next/server'
-import { cookies, type ReadonlyRequestCookies } from 'next/headers'
+import { cookies } from 'next/headers'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
 export async function POST(request: Request) {
-  // In some Next 15 setups, cookies() is typed as Promise<ReadonlyRequestCookies>
-  const cookieStore = (await cookies()) as ReadonlyRequestCookies
+  // Use cookies() directly; no extra typing/imports needed
+  const cookieStore = cookies()
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
