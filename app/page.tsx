@@ -1,7 +1,11 @@
-import { joinWaitlist } from './actions/waitlist'
 import Link from 'next/link'
+import { createSupabaseServer } from '@/lib/supabase/server'
+import { joinWaitlist } from './actions/waitlist'
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = createSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+
   return (
     <main className="px-6 py-16">
       <section className="mx-auto max-w-3xl text-center space-y-4">
@@ -21,8 +25,11 @@ export default function HomePage() {
         </form>
 
         <div className="mt-6 flex items-center justify-center gap-4">
-          <Link className="underline" href="/login">Log in</Link>
-          <Link className="underline" href="/dashboard">Dashboard</Link>
+          {!user ? (
+            <Link className="rounded border px-3 py-1" href="/login">Log in</Link>
+          ) : (
+            <Link className="rounded border px-3 py-1" href="/dashboard">Dashboard</Link>
+          )}
         </div>
       </section>
     </main>
