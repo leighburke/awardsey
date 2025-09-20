@@ -1,17 +1,26 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { getSupabaseBrowser } from '../../../lib/supabase/client'
+import { getSupabaseBrowser } from '../../../lib/supabase/client' // <-- keep relative path for now
 
 export default function LoginPage() {
+  return (
+    // Suspense boundary required when using useSearchParams in a client page
+    <Suspense fallback={<main className="p-8">Loading…</main>}>
+      <LoginForm />
+    </Suspense>
+  )
+}
+
+function LoginForm() {
   const supabase = getSupabaseBrowser()
+  const searchParams = useSearchParams()
+
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
-
-  const searchParams = useSearchParams()
 
   useEffect(() => {
     const errorFromUrl = searchParams.get('error')
@@ -68,3 +77,4 @@ export default function LoginPage() {
     </main>
   )
 }
+
