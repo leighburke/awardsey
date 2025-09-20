@@ -4,20 +4,22 @@ import { cookies } from 'next/headers'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
 export async function POST(request: Request) {
+  // In your Vercel env, cookies() is Promise-like; await it once.
+  const cookieStore: any = await (cookies() as unknown as Promise<any>)
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name: string) {
-          // call cookies() inline – avoids typing differences across environments
-          return cookies().get(name)?.value
+          return cookieStore.get(name)?.value
         },
         set(name: string, value: string, options: CookieOptions) {
-          cookies().set({ name, value, ...options })
+          cookieStore.set({ name, value, ...options })
         },
         remove(name: string, options: CookieOptions) {
-          cookies().set({ name, value: '', ...options, maxAge: 0 })
+          cookieStore.set({ name, value: '', ...options, maxAge: 0 })
         },
       },
     }
