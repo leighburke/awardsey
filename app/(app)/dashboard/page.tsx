@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { addChallenge, markDoneToday } from './actions'
 import { signOut } from '@/app/auth/signout/action'
 import { computeCurrentStreak, isDoneToday } from '@/lib/utils/streaks'
+import type { PostgrestError } from '@supabase/supabase-js'
 
 type Challenge = {
   id: string
@@ -28,20 +29,25 @@ export default async function DashboardPage() {
     )
   }  
    
-  const { data: challenges, error } = await supabase
+  const challengesRes = await supabase
     .from('challenges')
     .select('*')
-    .order('created_at', { ascending: false }) as { data: Challenge[] | null, error: any }
+    .order('created_at', { ascending: false })
+
+  const challenges = challengesRes.data as Challenge[] | null
+  const error = challengesRes.error as PostgrestError | null
 
   // Fetch last 90 days of entries for this user
   const since = new Date()
   since.setDate(since.getDate() - 90)
   const sinceISO = since.toISOString().slice(0,10)
 
-  const { data: entries } = await supabase
+  const entriesRes = await supabase
     .from('challenge_entries')
     .select('challenge_id,entry_date')
-    .gte('entry_date', sinceISO) as { data: Entry[] | null }
+    .gte('entry_date', sinceISO)
+
+  const entries = entriesRes.data as Entry[] | null
 
   // Group entries by challenge
   const byChallenge = new Map<string, string[]>()
@@ -126,4 +132,3 @@ export default async function DashboardPage() {
     </main>
   )
 }
-
