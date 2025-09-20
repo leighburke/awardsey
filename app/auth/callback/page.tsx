@@ -1,41 +1,34 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase/client'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 
 export default function AuthCallbackPage() {
   const router = useRouter()
 
   useEffect(() => {
     const run = async () => {
-      // PKCE / OAuth code exchange (expects the full URL)
-      const { error: _exchangeError } = await supabase.auth.exchangeCodeForSession(
-        window.location.href
-      )
-      // For magic links, tokens can arrive in the URL fragment. After the call above,
-      // Supabase should establish the session and set cookies (client-side).
-      // It's okay if exchangeError exists for magic-link flows; we check session next.
+      const supabase = getSupabaseBrowser()
 
-      // Optional: clear the hash to keep URLs tidy
+      // Perform PKCE/OAuth exchange if present; for magic links this is harmless.
+      // Don't assign to a var to avoid ESLint "unused" warnings.
+      await supabase.auth.exchangeCodeForSession(window.location.href).catch(() => {})
+
+      // Clean up the URL hash if present
       if (window.location.hash) {
         history.replaceState(null, '', window.location.pathname + window.location.search)
       }
 
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        router.replace('/dashboard')
-      } else {
-        router.replace('/login?error=Login%20link%20invalid%20or%20expired')
-      }
+      const { data } = await supabase.auth.getSession()
+      router.replace(data.session ? '/dashboard' : '/login?error=Login%20link%20invalid%20or%20expired')
     }
+
     run()
   }, [router])
 
-  return (
-    <main className="p-8">
-      <p>Signing you in…</p>
-    </main>
-  )
+  return <main className="p-8">Signing you in…</main>
 }
-
