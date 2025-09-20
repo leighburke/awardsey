@@ -15,7 +15,7 @@ export function createSupabaseServerReadOnly() {
       get(name: string) {
         return store.get(name)?.value
       },
-      // no set/remove on purpose (Next will throw in RSC)
+      // intentionally no set/remove here
     },
   })
 }
@@ -32,7 +32,6 @@ export function createSupabaseServer() {
         return store.get(name)?.value
       },
       set(name: string, value: string, options: CookieOptions) {
-        // Allowed in Server Actions / Route Handlers
         store.set({ name, value, ...options })
       },
       remove(name: string, options: CookieOptions) {

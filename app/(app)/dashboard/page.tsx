@@ -1,4 +1,4 @@
-import { createSupabaseServer } from '@/lib/supabase/server'
+import { createSupabaseServerReadOnly } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { addChallenge, markDoneToday } from './actions'
 import { signOut } from '@/app/auth/signout/action'

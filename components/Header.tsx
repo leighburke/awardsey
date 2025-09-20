@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { createSupabaseServer } from '@/lib/supabase/server'
+import { createSupabaseServerReadOnly } from '@/lib/supabase/server'
 
 export default async function Header() {
   const supabase = createSupabaseServerReadOnly()
