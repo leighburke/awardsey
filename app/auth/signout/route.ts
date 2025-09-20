@@ -3,9 +3,15 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
+// Minimal type surface we need from Next's cookies store
+type CookieStore = {
+  get(name: string): { value: string } | undefined
+  set(options: { name: string; value: string } & CookieOptions): void
+}
+
 export async function POST(request: Request) {
-  // In your Vercel env, cookies() is Promise-like; await it once.
-  const cookieStore: any = await (cookies() as unknown as Promise<any>)
+  // Works if cookies() returns a value or a Promise-like:
+  const cookieStore = (await Promise.resolve(cookies() as unknown)) as CookieStore
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
