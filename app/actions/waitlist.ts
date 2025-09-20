@@ -2,13 +2,22 @@
 
 import { revalidatePath } from 'next/cache'
 import { createSupabaseServer } from '@/lib/supabase/server'
+import { sendWaitlistThanks } from '@/lib/email'
 
 export async function joinWaitlist(formData: FormData): Promise<void> {
-  const email = (formData.get('email') as string | null)?.trim().toLowerCase() || ''
-  const source = (formData.get('source') as string | null) || 'home_hero'
+  const emailRaw = formData.get('email')
+  const sourceRaw = formData.get('source')
+  const email = (typeof emailRaw === 'string' ? emailRaw : '').trim().toLowerCase()
+  const source = (typeof sourceRaw === 'string' ? sourceRaw : 'home_hero')
+
   if (!email || !email.includes('@')) return
 
-  const supabase = createSupabaseServer() // server-side anon client
+  const supabase = createSupabaseServer()
   const { error } = await supabase.from('waitlist').insert({ email, source })
-  if (!error) revalidatePath('/')
+
+  if (!error) {
+    // Fire-and-forget email; don’t block the user flow
+    sendWaitlistThanks(email).catch(() => {})
+    revalidatePath('/')
+  }
 }
