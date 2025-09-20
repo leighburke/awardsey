@@ -1,9 +1,11 @@
+// app/auth/signout/route.ts
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import { cookies, type ReadonlyRequestCookies } from 'next/headers'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
 export async function POST(request: Request) {
-  const cookieStore = cookies()
+  // In some Next 15 setups, cookies() is typed as Promise<ReadonlyRequestCookies>
+  const cookieStore = (await cookies()) as ReadonlyRequestCookies
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,9 +25,7 @@ export async function POST(request: Request) {
     }
   )
 
-  // End the session
   await supabase.auth.signOut()
-
-  // Back to login
   return NextResponse.redirect(new URL('/login', request.url))
 }
+
