@@ -23,6 +23,16 @@ export default async function DashboardPage() {
     <main className="p-8 space-y-6">
       <h1 className="text-2xl font-semibold">Welcome, {user.email}</h1>
 
+<form action="/auth/signout" method="post" className="mt-2">
+  <button
+    type="submit"
+    className="rounded border px-3 py-1 text-sm"
+    title="Sign out"
+  >
+    Log out
+  </button>
+</form>
+
       <form action={addChallenge} className="flex items-center gap-2">
         <input
           name="title"
