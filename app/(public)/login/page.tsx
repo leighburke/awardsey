@@ -1,19 +1,29 @@
 'use client'
-import { useState } from 'react'
-import { supabase } from '@/lib/supabase/client'
+
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { getSupabaseBrowser } from '@/lib/supabase/client'
 
 export default function LoginPage() {
+  const supabase = getSupabaseBrowser()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
+
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const errorFromUrl = searchParams.get('error')
+    if (errorFromUrl) setErr(decodeURIComponent(errorFromUrl))
+  }, [searchParams])
 
   const sendMagicLink = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true); setErr(null); setMsg(null)
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` }
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
     })
     setLoading(false)
     if (error) setErr(error.message)
@@ -24,7 +34,7 @@ export default function LoginPage() {
     setErr(null); setMsg(null)
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'github',
-      options: { redirectTo: `${window.location.origin}/auth/callback` }
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     })
     if (error) setErr(error.message)
   }
@@ -58,4 +68,3 @@ export default function LoginPage() {
     </main>
   )
 }
-
