@@ -4,8 +4,15 @@ import { redirect } from 'next/navigation'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+// Minimal typing that works across Next 15 environments (sync/async cookies())
+type CookieStore = {
+  get(name: string): { value: string } | undefined
+  set(options: { name: string; value: string } & CookieOptions): void
+}
+
 export async function signOut(): Promise<void> {
-  const cookieStore = await Promise.resolve(cookies() as unknown as any)
+  // Works whether cookies() is sync or Promise-like
+  const cookieStore = (await Promise.resolve(cookies() as unknown)) as CookieStore
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
