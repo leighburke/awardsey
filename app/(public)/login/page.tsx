@@ -1,83 +1,10 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { getSupabaseBrowser } from '@/lib/supabase/client'
+import { Suspense } from 'react'
+import LoginClient from './LoginClient'
 
 export default function LoginPage() {
-  const supabase = getSupabaseBrowser()
-  const [email, setEmail] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [msg, setMsg] = useState<string | null>(null)
-  const [err, setErr] = useState<string | null>(null)
-  const sp = useSearchParams()
-
-  // show callback error (if any)
-  useEffect(() => {
-    const e = sp.get('error')
-    const m = sp.get('msg')
-    if (e) setErr(m || e)
-  }, [sp])
-
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    (typeof window !== 'undefined' ? window.location.origin : '')
-
-  const sendMagicLink = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setErr(null)
-    setMsg(null)
-    setLoading(true)
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${baseUrl}/auth/callback`,
-      },
-    })
-    setLoading(false)
-    if (error) setErr(error.message)
-    else setMsg('Check your email for the login link.')
-  }
-
-  const signInWithGithub = async () => {
-    setErr(null)
-    setMsg(null)
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'github',
-      options: {
-        redirectTo: `${baseUrl}/auth/callback`,
-      },
-    })
-    if (error) setErr(error.message)
-  }
-
   return (
-    <main className="mx-auto max-w-md px-6 py-16">
-      <h1 className="text-2xl font-semibold">Sign in</h1>
-
-      <form onSubmit={sendMagicLink} className="mt-6 space-y-3">
-        <input
-          type="email"
-          required
-          placeholder="you@example.com"
-          className="w-full rounded-xl border px-4 py-3 text-black"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <button disabled={loading} className="w-full rounded-xl bg-black px-4 py-3 text-white">
-          {loading ? 'Sending…' : 'Send magic link'}
-        </button>
-      </form>
-
-      <div className="mt-6">
-        <button onClick={signInWithGithub} className="w-full rounded-xl border px-4 py-3">
-          Continue with GitHub
-        </button>
-      </div>
-
-      {msg && <p className="mt-4 text-sm text-green-600">{msg}</p>}
-      {err && <p className="mt-4 text-sm text-red-600">{err}</p>}
-    </main>
+    <Suspense fallback={<div />}>
+      <LoginClient />
+    </Suspense>
   )
 }
-
