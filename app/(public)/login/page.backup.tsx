@@ -1,38 +1,43 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { getSupabaseBrowser } from '@/lib/supabase/client'
 
 export default function LoginPage() {
   const supabase = getSupabaseBrowser()
+
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
-  const sp = useSearchParams()
 
-  // show callback error (if any)
+  // Read any error passed back from /auth/callback without useSearchParams
   useEffect(() => {
-    const e = sp.get('error')
-    const m = sp.get('msg')
-    if (e) setErr(m || e)
-  }, [sp])
+    if (typeof window === 'undefined') return
+    const url = new URL(window.location.href)
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    (typeof window !== 'undefined' ? window.location.origin : '')
+    // query (?error=...&message=...)
+    const qError = url.searchParams.get('error')
+    const qMsg = url.searchParams.get('message')
+
+    // hash (#error=...&error_description=...)
+    const hash = window.location.hash || ''
+    const hParams = new URLSearchParams(hash.startsWith('#') ? hash.slice(1) : hash)
+    const hError = hParams.get('error')
+    const hMsg = hParams.get('error_description')
+
+    if (qError || hError) {
+      setErr(qMsg || hMsg || qError || hError)
+    }
+  }, [])
 
   const sendMagicLink = async (e: React.FormEvent) => {
     e.preventDefault()
-    setErr(null)
-    setMsg(null)
-    setLoading(true)
+    setLoading(true); setErr(null); setMsg(null)
+    const redirect = `${window.location.origin}/auth/callback`
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        emailRedirectTo: `${baseUrl}/auth/callback`,
-      },
+      options: { emailRedirectTo: redirect }
     })
     setLoading(false)
     if (error) setErr(error.message)
@@ -40,13 +45,11 @@ export default function LoginPage() {
   }
 
   const signInWithGithub = async () => {
-    setErr(null)
-    setMsg(null)
+    setErr(null); setMsg(null)
+    const redirect = `${window.location.origin}/auth/callback`
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'github',
-      options: {
-        redirectTo: `${baseUrl}/auth/callback`,
-      },
+      options: { redirectTo: redirect }
     })
     if (error) setErr(error.message)
   }
@@ -54,6 +57,17 @@ export default function LoginPage() {
   return (
     <main className="mx-auto max-w-md px-6 py-16">
       <h1 className="text-2xl font-semibold">Sign in</h1>
+
+      {err && (
+        <p className="mt-4 rounded bg-red-50 p-3 text-sm text-red-700">
+          {err}
+        </p>
+      )}
+      {msg && (
+        <p className="mt-4 rounded bg-green-50 p-3 text-sm text-green-700">
+          {msg}
+        </p>
+      )}
 
       <form onSubmit={sendMagicLink} className="mt-6 space-y-3">
         <input
@@ -74,10 +88,6 @@ export default function LoginPage() {
           Continue with GitHub
         </button>
       </div>
-
-      {msg && <p className="mt-4 text-sm text-green-600">{msg}</p>}
-      {err && <p className="mt-4 text-sm text-red-600">{err}</p>}
     </main>
   )
 }
-
